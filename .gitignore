@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+.env
+
+# CaseWatch Local Data
+logs/
+backups/
+config.json
+data/reminders.json
+*.xlsx
+!test_data.xlsx
+
+# macOS
+.DS_Store
+
+# IDEs
+.vscode/
+.idea/
