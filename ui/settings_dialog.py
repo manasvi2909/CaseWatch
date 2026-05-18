@@ -30,6 +30,7 @@ from PyQt5.QtWidgets import (
     QMessageBox,
     QWidget,
     QFrame,
+    QComboBox,
 )
 
 from app_logger import get_logger
@@ -82,16 +83,23 @@ class SettingsDialog(QDialog):
         interval_row.addWidget(QLabel("Repeat every:"))
 
         self._cooldown_spin = QSpinBox()
-        self._cooldown_spin.setRange(5, 1440)
-        self._cooldown_spin.setSuffix(" minutes")
+        self._cooldown_spin.setRange(1, 10000)
         self._cooldown_spin.setFont(QFont("Segoe UI", 12, QFont.Bold))
-        self._cooldown_spin.setMinimumWidth(160)
+        self._cooldown_spin.setFixedWidth(100)
         self._cooldown_spin.setMinimumHeight(36)
         self._cooldown_spin.setToolTip(
-            "Minimum time between repeated reminders for the same overdue case.\n"
-            "Example: 30 = remind every 30 minutes per pending case."
+            "Minimum time between repeated reminders for the same overdue case."
         )
         interval_row.addWidget(self._cooldown_spin)
+
+        self._cooldown_unit_combo = QComboBox()
+        self._cooldown_unit_combo.addItems(["seconds", "minutes", "hours"])
+        self._cooldown_unit_combo.setCurrentText("minutes")
+        self._cooldown_unit_combo.setFixedWidth(120)
+        self._cooldown_unit_combo.setMinimumHeight(36)
+        self._cooldown_unit_combo.setFont(QFont("Segoe UI", 12))
+        interval_row.addWidget(self._cooldown_unit_combo)
+
         interval_row.addStretch()
         reminder_layout.addLayout(interval_row)
 
@@ -101,12 +109,17 @@ class SettingsDialog(QDialog):
         presets_label.setObjectName("subtitleText")
         presets_row.addWidget(presets_label)
 
-        for label, value in [("15 min", 15), ("30 min", 30), ("1 hour", 60), ("2 hours", 120)]:
+        def apply_preset(val, unit):
+            self._cooldown_spin.setValue(val)
+            self._cooldown_unit_combo.setCurrentText(unit)
+
+        presets = [("15 min", 15, "minutes"), ("30 min", 30, "minutes"), ("1 hour", 1, "hours"), ("2 hours", 2, "hours")]
+        for label, val, unit in presets:
             btn = QPushButton(label)
             btn.setMaximumWidth(70)
             btn.setMaximumHeight(28)
             btn.setCursor(Qt.PointingHandCursor)
-            btn.clicked.connect(lambda checked, v=value: self._cooldown_spin.setValue(v))
+            btn.clicked.connect(lambda checked, v=val, u=unit: apply_preset(v, u))
             presets_row.addWidget(btn)
 
         presets_row.addStretch()
@@ -178,7 +191,8 @@ class SettingsDialog(QDialog):
         """Populate form with current configuration values."""
         config = get_config()
         self._file_input.setText(config.excel_file_path)
-        self._cooldown_spin.setValue(config.reminder_cooldown_minutes)
+        self._cooldown_spin.setValue(config.reminder_cooldown)
+        self._cooldown_unit_combo.setCurrentText(config.reminder_cooldown_unit)
         self._interval_spin.setValue(config.scan_interval_minutes)
         self._threshold_spin.setValue(config.overdue_threshold_days)
         self._auto_start_check.setChecked(config.auto_start)
@@ -216,15 +230,28 @@ class SettingsDialog(QDialog):
 
         config = get_config()
         config.excel_file_path = file_path
-        config.set("reminder_cooldown_minutes", self._cooldown_spin.value())
+        config.set("reminder_cooldown", self._cooldown_spin.value())
+        config.set("reminder_cooldown_unit", self._cooldown_unit_combo.currentText())
+
+        # Normalize and store reminder_cooldown_minutes for backward compatibility
+        val = float(self._cooldown_spin.value())
+        unit = self._cooldown_unit_combo.currentText().lower()
+        if unit == "seconds":
+            mins = val / 60.0
+        elif unit == "hours":
+            mins = val * 60.0
+        else:
+            mins = val
+        config.set("reminder_cooldown_minutes", mins)
         config.set("scan_interval_minutes", self._interval_spin.value())
         config.set("overdue_threshold_days", self._threshold_spin.value())
         config.set("auto_start", self._auto_start_check.isChecked())
         config.save()
 
         logger.info(
-            "Settings saved: reminder_interval=%d min, scan_interval=%d min, threshold=%d days",
+            "Settings saved: reminder_interval=%d %s, scan_interval=%d min, threshold=%d days",
             self._cooldown_spin.value(),
+            self._cooldown_unit_combo.currentText(),
             self._interval_spin.value(),
             self._threshold_spin.value(),
         )

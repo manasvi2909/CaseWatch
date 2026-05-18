@@ -19,7 +19,8 @@ BASE_DIR = Path(__file__).resolve().parent
 DEFAULTS = {
     "excel_file_path": "",
     "scan_interval_minutes": 5,
-    "reminder_cooldown_minutes": 30,
+    "reminder_cooldown": 30,
+    "reminder_cooldown_unit": "minutes",
     "overdue_threshold_days": 13,
     "sheet_name": None,  # None = first sheet
     "auto_start": True,
@@ -102,8 +103,25 @@ class _Config:
         return int(self._data.get("scan_interval_minutes", 5))
 
     @property
-    def reminder_cooldown_minutes(self) -> int:
-        return int(self._data.get("reminder_cooldown_minutes", 30))
+    def reminder_cooldown(self) -> int:
+        return int(self._data.get("reminder_cooldown", self._data.get("reminder_cooldown_minutes", 30)))
+
+    @property
+    def reminder_cooldown_unit(self) -> str:
+        return str(self._data.get("reminder_cooldown_unit", "minutes"))
+
+    @property
+    def reminder_cooldown_minutes(self) -> float:
+        if "reminder_cooldown_minutes" in self._data and "reminder_cooldown" not in self._data:
+            return float(self._data["reminder_cooldown_minutes"])
+        
+        val = float(self.reminder_cooldown)
+        unit = self.reminder_cooldown_unit.lower()
+        if unit == "seconds":
+            return val / 60.0
+        elif unit == "hours":
+            return val * 60.0
+        return val # minutes
 
     @property
     def overdue_threshold_days(self) -> int:

@@ -53,13 +53,13 @@ class Scheduler(QObject):
         # Scan at the same frequency as the user's reminder interval
         # so notifications fire on time
         interval_minutes = config.reminder_cooldown_minutes
-        interval_ms = interval_minutes * 60 * 1000
+        interval_ms = int(interval_minutes * 60 * 1000)
 
         self._timer.start(interval_ms)
         self._running = True
 
         logger.info(
-            "Scheduler started (interval: %d minutes)",
+            "Scheduler started (interval: %s minutes)",
             interval_minutes,
         )
 

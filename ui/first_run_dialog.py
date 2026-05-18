@@ -26,6 +26,7 @@ from PyQt5.QtWidgets import (
     QMessageBox,
     QWidget,
     QSizePolicy,
+    QComboBox,
 )
 
 from app_logger import get_logger
@@ -74,8 +75,9 @@ class FirstRunDialog(QDialog):
             self._start_btn.setEnabled(True)
             self._start_btn.setText(" Save & Continue")
         
-        if config.reminder_cooldown_minutes:
-            self._interval_spin.setValue(config.reminder_cooldown_minutes)
+        if config.reminder_cooldown:
+            self._interval_spin.setValue(config.reminder_cooldown)
+            self._interval_unit_combo.setCurrentText(config.reminder_cooldown_unit)
         if config.overdue_threshold_days:
             self._overdue_spin.setValue(config.overdue_threshold_days)
 
@@ -225,11 +227,16 @@ class FirstRunDialog(QDialog):
         int_layout.addWidget(QLabel("Remind me every:"))
         
         self._interval_spin = QSpinBox()
-        self._interval_spin.setRange(1, 1440)
+        self._interval_spin.setRange(1, 10000)
         self._interval_spin.setValue(30)
         self._interval_spin.setFixedWidth(80)
         int_layout.addWidget(self._interval_spin)
-        int_layout.addWidget(QLabel("minutes"))
+
+        self._interval_unit_combo = QComboBox()
+        self._interval_unit_combo.addItems(["seconds", "minutes", "hours"])
+        self._interval_unit_combo.setCurrentText("minutes")
+        self._interval_unit_combo.setFixedWidth(100)
+        int_layout.addWidget(self._interval_unit_combo)
         int_layout.addStretch()
         layout.addLayout(int_layout)
 
@@ -358,13 +365,25 @@ class FirstRunDialog(QDialog):
         # Save configuration
         config = get_config()
         config.excel_file_path = self._file_path
-        config.set("reminder_cooldown_minutes", self._interval_spin.value())
+        config.set("reminder_cooldown", self._interval_spin.value())
+        config.set("reminder_cooldown_unit", self._interval_unit_combo.currentText())
+
+        # Normalize and store reminder_cooldown_minutes for backward compatibility
+        val = float(self._interval_spin.value())
+        unit = self._interval_unit_combo.currentText().lower()
+        if unit == "seconds":
+            mins = val / 60.0
+        elif unit == "hours":
+            mins = val * 60.0
+        else:
+            mins = val
+        config.set("reminder_cooldown_minutes", mins)
         config.set("overdue_threshold_days", self._overdue_spin.value())
         config.save()
 
         logger.info(
-            "First-run setup complete: file=%s, interval=%d min, overdue=%d days",
-            self._file_path, self._interval_spin.value(), self._overdue_spin.value()
+            "First-run setup complete: file=%s, interval=%d %s, overdue=%d days",
+            self._file_path, self._interval_spin.value(), self._interval_unit_combo.currentText(), self._overdue_spin.value()
         )
 
         self.accept()
