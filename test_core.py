@@ -238,30 +238,46 @@ def test_config():
     """Test configuration management."""
     print("\n=== Testing Config ===")
 
-    # Reset singleton for testing
-    _Config._instance = None
+    # Backup existing config file to test clean defaults
+    backup = None
+    if CONFIG_FILE.exists():
+        backup = CONFIG_FILE.with_suffix(".bak")
+        shutil.copy2(CONFIG_FILE, backup)
+        CONFIG_FILE.unlink()
 
-    config = get_config()
+    try:
+        # Reset singleton for testing
+        _Config._instance = None
 
-    # Test defaults
-    assert config.overdue_threshold_days == 13, "FAIL: Default threshold should be 13"
-    assert config.scan_interval_minutes == 5, "FAIL: Default scan interval should be 5"
-    assert config.reminder_cooldown_minutes == 30, "FAIL: Default cooldown should be 30"
-    assert config.highlight_color == "FFC7CE", "FAIL: Default highlight color should be FFC7CE"
-    print("  ✓ Default values correct")
+        config = get_config()
 
-    # Test first-run detection
-    _Config._instance = None
-    config2 = get_config()
-    assert config2.is_first_run == (config2.excel_file_path == "")
-    print(f"  ✓ First-run detection: is_first_run={config2.is_first_run}")
+        # Test defaults
+        assert config.overdue_threshold_days == 13, f"FAIL: Default threshold should be 13, got {config.overdue_threshold_days}"
+        assert config.scan_interval_minutes == 5, f"FAIL: Default scan interval should be 5, got {config.scan_interval_minutes}"
+        assert config.reminder_cooldown_minutes == 30, f"FAIL: Default cooldown should be 30, got {config.reminder_cooldown_minutes}"
+        assert config.highlight_color == "FFC7CE", f"FAIL: Default highlight color should be FFC7CE, got {config.highlight_color}"
+        print("  ✓ Default values correct")
 
-    # Test validation
-    config2.excel_file_path = "/nonexistent/file.xlsx"
-    assert not config2.validate_excel_path(), "FAIL: Nonexistent path should not validate"
-    print("  ✓ Path validation works")
+        # Test first-run detection
+        _Config._instance = None
+        config2 = get_config()
+        assert config2.is_first_run == (config2.excel_file_path == "")
+        print(f"  ✓ First-run detection: is_first_run={config2.is_first_run}")
 
-    print("  ✅ All Config tests passed!")
+        # Test validation
+        config2.excel_file_path = "/nonexistent/file.xlsx"
+        assert not config2.validate_excel_path(), "FAIL: Nonexistent path should not validate"
+        print("  ✓ Path validation works")
+
+        print("  ✅ All Config tests passed!")
+
+    finally:
+        # Restore original config file
+        if backup and backup.exists():
+            _Config._instance = None
+            if CONFIG_FILE.exists():
+                CONFIG_FILE.unlink()
+            shutil.move(backup, CONFIG_FILE)
 
 
 def main():

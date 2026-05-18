@@ -261,11 +261,13 @@ def scan_excel(file_path: str, sheet_name: Optional[str] = None) -> List[Case]:
     return cases
 
 
-def highlight_overdue_rows(
+def highlight_rows(
     file_path: str,
     overdue_rows: Set[int],
-    resolved_rows: Set[int],
-    color: str = "FFC7CE",
+    reported_rows: Set[int],
+    pending_rows: Set[int],
+    overdue_color: str = "FFC7CE",
+    reported_color: str = "C6EFCE",
     max_retries: int = 3,
     retry_delay: float = 2.0,
 ) -> bool:
@@ -276,22 +278,25 @@ def highlight_overdue_rows(
 
     Args:
         file_path: Path to the .xlsx file.
-        overdue_rows: Set of row indices to highlight (1-based).
-        resolved_rows: Set of row indices to un-highlight (1-based).
-        color: Hex color for highlighting (without #).
+        overdue_rows: Set of row indices to highlight red (1-based).
+        reported_rows: Set of row indices to highlight green (1-based).
+        pending_rows: Set of row indices to un-highlight (1-based).
+        overdue_color: Hex color for overdue cases (without #).
+        reported_color: Hex color for reported cases (without #).
         max_retries: Number of retry attempts if file is locked.
         retry_delay: Seconds between retries.
 
     Returns:
         True if highlighting was applied successfully.
     """
-    if not overdue_rows and not resolved_rows:
+    if not overdue_rows and not reported_rows and not pending_rows:
         return True  # Nothing to do
 
     # Create backup first
     create_backup(file_path)
 
-    fill_red = PatternFill(start_color=color, end_color=color, fill_type="solid")
+    fill_red = PatternFill(start_color=overdue_color, end_color=overdue_color, fill_type="solid")
+    fill_green = PatternFill(start_color=reported_color, end_color=reported_color, fill_type="solid")
     fill_none = PatternFill(fill_type=None)
 
     for attempt in range(1, max_retries + 1):
@@ -307,8 +312,14 @@ def highlight_overdue_rows(
                     cell = ws.cell(row=row_idx, column=col)
                     cell.fill = fill_red
 
-            # Remove highlighting for resolved cases
-            for row_idx in resolved_rows:
+            # Apply reported highlighting
+            for row_idx in reported_rows:
+                for col in range(1, max_col + 1):
+                    cell = ws.cell(row=row_idx, column=col)
+                    cell.fill = fill_green
+
+            # Remove highlighting for pending cases
+            for row_idx in pending_rows:
                 for col in range(1, max_col + 1):
                     cell = ws.cell(row=row_idx, column=col)
                     cell.fill = fill_none
@@ -317,9 +328,10 @@ def highlight_overdue_rows(
             wb.close()
 
             logger.info(
-                "Highlighting updated: %d overdue, %d resolved",
+                "Highlighting updated: %d overdue (red), %d reported (green), %d pending (cleared)",
                 len(overdue_rows),
-                len(resolved_rows),
+                len(reported_rows),
+                len(pending_rows),
             )
             return True
 

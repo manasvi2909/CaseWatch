@@ -11,7 +11,7 @@ from PyQt5.QtCore import QTimer, QObject, pyqtSignal
 
 from app_logger import get_logger
 from config import get_config
-from excel_handler import scan_excel, highlight_overdue_rows
+from excel_handler import scan_excel, highlight_rows
 from models import Case
 from notifier import Notifier
 from tracker import ReminderTracker
@@ -45,7 +45,7 @@ class Scheduler(QObject):
         self._timer = QTimer(self)
         self._timer.timeout.connect(self.scan_now)
         self._running = False
-        self._previous_overdue_rows: Set[int] = set()
+        self._previous_row_states: dict[int, str] = {}
 
     def start(self) -> None:
         """Start periodic scanning at the configured interval."""
@@ -63,6 +63,7 @@ class Scheduler(QObject):
             interval_minutes,
         )
 
+        self._previous_row_states.clear()
         # Run initial scan immediately
         self.scan_now()
 
@@ -157,19 +158,46 @@ class Scheduler(QObject):
                 self._tracker.clear_case(case.case_id)
 
             # Step 6: Highlighting
-            current_overdue_rows = {c.row_index for c in overdue_cases}
-            resolved_rows = self._previous_overdue_rows - current_overdue_rows
-            new_overdue_rows = current_overdue_rows - self._previous_overdue_rows
+            current_row_states = {}
+            for case in all_cases:
+                if case.is_overdue(threshold):
+                    current_row_states[case.row_index] = "overdue"
+                elif case.date_reporting is not None:
+                    current_row_states[case.row_index] = "reported"
+                else:
+                    current_row_states[case.row_index] = "pending"
 
-            if new_overdue_rows or resolved_rows:
-                highlight_overdue_rows(
+            overdue_to_apply = set()
+            reported_to_apply = set()
+            pending_to_apply = set()
+
+            for row_idx, state in current_row_states.items():
+                prev_state = self._previous_row_states.get(row_idx)
+                if state != prev_state:
+                    if state == "overdue":
+                        overdue_to_apply.add(row_idx)
+                    elif state == "reported":
+                        reported_to_apply.add(row_idx)
+                    elif state == "pending":
+                        pending_to_apply.add(row_idx)
+
+            # Check for any deleted rows to clear their formatting
+            for row_idx, prev_state in self._previous_row_states.items():
+                if row_idx not in current_row_states:
+                    if prev_state in ("overdue", "reported"):
+                        pending_to_apply.add(row_idx)
+
+            if overdue_to_apply or reported_to_apply or pending_to_apply:
+                highlight_rows(
                     config.excel_file_path,
-                    overdue_rows=new_overdue_rows,
-                    resolved_rows=resolved_rows,
-                    color=config.highlight_color,
+                    overdue_rows=overdue_to_apply,
+                    reported_rows=reported_to_apply,
+                    pending_rows=pending_to_apply,
+                    overdue_color=config.highlight_color,
+                    reported_color="C6EFCE",
                 )
 
-            self._previous_overdue_rows = current_overdue_rows
+            self._previous_row_states = current_row_states
 
             # Step 7: Signal UI
             self.scan_completed.emit(all_cases, overdue_cases)
