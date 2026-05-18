@@ -9,10 +9,10 @@ venv/
 # CaseWatch Local Data
 logs/
 backups/
-config.json
+data/config.json
 data/reminders.json
 *.xlsx
-!test_data.xlsx
+!data/test_data.xlsx
 
 # macOS
 .DS_Store

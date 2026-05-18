@@ -7,8 +7,11 @@ import openpyxl
 from openpyxl.styles import Font, Alignment
 
 
-def generate_test_excel(output_path: str = "test_data.xlsx") -> None:
+def generate_test_excel(output_path: str = None) -> None:
     """Generate a sample 100-row stress test Excel workbook."""
+    if output_path is None:
+        from config import DATA_DIR
+        output_path = str(DATA_DIR / "test_data.xlsx")
     wb = openpyxl.Workbook()
     ws = wb.active
     ws.title = "FIR Records"

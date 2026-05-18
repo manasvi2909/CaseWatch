@@ -7,13 +7,33 @@ Thread-safe singleton pattern ensures consistent config access.
 
 import json
 import os
+import sys
 import threading
 from pathlib import Path
 from typing import Any, Optional
 
 
-# Base directory: where the application files live
-BASE_DIR = Path(__file__).resolve().parent
+# ── Directory Paths ──
+if getattr(sys, "frozen", False):
+    # PyInstaller packaging environment
+    ASSET_DIR = Path(sys._MEIPASS)
+    BASE_DIR = Path(sys.executable).resolve().parent
+else:
+    # Local development environment
+    ASSET_DIR = Path(__file__).resolve().parent
+    BASE_DIR = Path(__file__).resolve().parent
+
+DATA_DIR = BASE_DIR / "data"
+CONFIG_FILE = DATA_DIR / "config.json"
+
+# Ensure data directory exists immediately on config load
+DATA_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def get_asset_path(relative_path: str) -> str:
+    """Resolve absolute path for static read-only assets (stylesheets, icons)."""
+    return str(ASSET_DIR / relative_path)
+
 
 # Default configuration values
 DEFAULTS = {
@@ -29,8 +49,6 @@ DEFAULTS = {
     "max_backups": 10,
     "batch_notification_threshold": 1,
 }
-
-CONFIG_FILE = BASE_DIR / "config.json"
 
 
 class _Config:

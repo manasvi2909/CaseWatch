@@ -103,8 +103,9 @@ class MainWindow(QMainWindow):
 
     def _load_stylesheet(self) -> None:
         """Load QSS stylesheet from assets."""
-        from config import BASE_DIR
-        qss_path = BASE_DIR / "assets" / "styles" / "app_style.qss"
+        from config import get_asset_path
+        from pathlib import Path
+        qss_path = Path(get_asset_path("assets/styles/app_style.qss"))
         if qss_path.exists():
             try:
                 with open(qss_path, "r", encoding="utf-8") as f:

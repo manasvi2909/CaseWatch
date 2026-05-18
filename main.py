@@ -14,7 +14,7 @@ from PyQt5.QtWidgets import QApplication, QFileDialog, QMessageBox
 from PyQt5.QtCore import QSharedMemory
 
 from app_logger import setup_logging, get_logger
-from config import get_config
+from config import get_config, get_asset_path
 from tracker import ReminderTracker
 from notifier import Notifier
 from scheduler import Scheduler
@@ -116,7 +116,7 @@ def main() -> None:
     app.setQuitOnLastWindowClosed(False)  # Keep running in tray
 
     # Load Global Stylesheet
-    qss_path = Path(__file__).parent / "assets" / "styles" / "app_style.qss"
+    qss_path = Path(get_asset_path("assets/styles/app_style.qss"))
     if qss_path.exists():
         try:
             with open(qss_path, "r", encoding="utf-8") as f:

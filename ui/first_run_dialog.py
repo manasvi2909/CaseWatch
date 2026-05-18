@@ -30,7 +30,7 @@ from PyQt5.QtWidgets import (
 )
 
 from app_logger import get_logger
-from config import get_config
+from config import get_config, get_asset_path
 
 logger = get_logger("first_run_dialog")
 
@@ -134,7 +134,7 @@ class FirstRunDialog(QDialog):
         row1 = QHBoxLayout()
         row1.setSpacing(14)
         icon_label = QLabel()
-        icon_label.setPixmap(QIcon("assets/icons/excel.svg").pixmap(24, 24))
+        icon_label.setPixmap(QIcon(get_asset_path("assets/icons/excel.svg")).pixmap(24, 24))
         icon_label.setFixedWidth(24)
         icon_label.setAlignment(Qt.AlignTop)
         row1.addWidget(icon_label)
@@ -155,7 +155,7 @@ class FirstRunDialog(QDialog):
         row2 = QHBoxLayout()
         row2.setSpacing(8)
         w_icon = QLabel()
-        w_icon.setPixmap(QIcon("assets/icons/warning.svg").pixmap(16, 16))
+        w_icon.setPixmap(QIcon(get_asset_path("assets/icons/warning.svg")).pixmap(16, 16))
         w_icon.setFixedWidth(16)
         w_icon.setAlignment(Qt.AlignTop)
         row2.addWidget(w_icon)
@@ -192,14 +192,14 @@ class FirstRunDialog(QDialog):
         file_layout.setContentsMargins(16, 12, 16, 12)
         
         f_icon = QLabel()
-        f_icon.setPixmap(QIcon("assets/icons/folder.svg").pixmap(20, 20))
+        f_icon.setPixmap(QIcon(get_asset_path("assets/icons/folder.svg")).pixmap(20, 20))
         file_layout.addWidget(f_icon)
 
         self._file_label = QLabel("Selected: No file")
         file_layout.addWidget(self._file_label, 1)
 
         browse_btn = QPushButton(" Browse...")
-        browse_btn.setIcon(QIcon("assets/icons/folder.svg"))
+        browse_btn.setIcon(QIcon(get_asset_path("assets/icons/folder.svg")))
         browse_btn.setCursor(Qt.PointingHandCursor)
         browse_btn.setObjectName("secondaryAction")
         browse_btn.clicked.connect(self._browse_file)
@@ -280,7 +280,7 @@ class FirstRunDialog(QDialog):
         action_layout.addWidget(cancel_btn)
 
         self._start_btn = QPushButton(" Start Monitoring")
-        self._start_btn.setIcon(QIcon("assets/icons/play.svg"))
+        self._start_btn.setIcon(QIcon(get_asset_path("assets/icons/play.svg")))
         self._start_btn.setCursor(Qt.PointingHandCursor)
         self._start_btn.setObjectName("primaryAction")
         self._start_btn.setEnabled(False)

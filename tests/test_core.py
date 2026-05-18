@@ -16,7 +16,7 @@ from datetime import date, timedelta, datetime
 from pathlib import Path
 
 # Ensure project root is in path
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from models import Case
 from config import get_config, CONFIG_FILE, _Config
@@ -122,7 +122,7 @@ def test_excel_scan():
     """Test Excel scanning with the generated test data."""
     print("\n=== Testing Excel Scanner ===")
 
-    test_file = Path(__file__).parent / "test_data.xlsx"
+    test_file = Path(__file__).parent.parent / "data" / "test_data.xlsx"
     if not test_file.exists():
         print("  ⚠ test_data.xlsx not found — run generate_test_data.py first")
         return False

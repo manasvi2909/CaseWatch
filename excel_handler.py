@@ -27,6 +27,7 @@ logger = get_logger("excel_handler")
 
 # Backup directory
 BACKUP_DIR = BASE_DIR / "backups"
+BACKUP_DIR.mkdir(parents=True, exist_ok=True)
 
 # Column name mapping — case-insensitive, whitespace-tolerant
 COLUMN_MAP = {
