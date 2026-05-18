@@ -119,11 +119,33 @@ class Notifier:
         except Exception as e:
             logger.error("Failed to send batch notification: %s", e)
 
+    def send_custom_notification(
+        self,
+        title: str,
+        message: str,
+        icon_type: QSystemTrayIcon.MessageIcon = QSystemTrayIcon.Information,
+        show_open_excel: bool = True,
+    ) -> None:
+        """Send a custom tray notification."""
+        try:
+            self._tray.showMessage(
+                title,
+                message,
+                icon_type,
+                10000,  # Display for 10 seconds
+            )
+            # macOS fallback
+            if platform.system() == "Darwin":
+                self._send_macos_notification(title, message, show_open_excel=show_open_excel)
+            logger.info("Custom notification sent: title='%s'", title)
+        except Exception as e:
+            logger.error("Failed to send custom notification: %s", e)
+
     @staticmethod
-    def _send_macos_notification(title: str, message: str) -> None:
+    def _send_macos_notification(title: str, message: str, show_open_excel: bool = True) -> None:
         """
         Send a native macOS notification using osascript in a background thread.
-        Shows an alert with 'Close' and 'Open Excel' options.
+        Shows an alert with 'Close' and optionally 'Open Excel' options.
         """
         import threading
 
@@ -132,12 +154,14 @@ class Notifier:
                 # Escape double quotes for AppleScript
                 safe_title = title.replace('"', '\\"')
                 safe_message = message.replace('"', '\\"').replace('\n', '\\n')
+                buttons_str = 'buttons {"Close", "Open Excel"}' if show_open_excel else 'buttons {"OK"}'
+                default_btn_str = 'default button "Close"' if show_open_excel else 'default button "OK"'
                 script = (
                     f'display alert "{safe_title}" '
                     f'message "{safe_message}" '
                     f'as warning '
-                    f'buttons {{"Close", "Open Excel"}} '
-                    f'default button "Close" '
+                    f'{buttons_str} '
+                    f'{default_btn_str} '
                     f'giving up after 60'
                 )
                 
@@ -149,7 +173,7 @@ class Notifier:
                 )
                 
                 # Check if user clicked 'Open Excel'
-                if "button returned:Open Excel" in result.stdout:
+                if show_open_excel and "button returned:Open Excel" in result.stdout:
                     Notifier.open_excel_file()
             except Exception as e:
                 logger.warning("macOS native notification failed: %s", e)

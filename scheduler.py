@@ -46,6 +46,7 @@ class Scheduler(QObject):
         self._timer.timeout.connect(self.scan_now)
         self._running = False
         self._previous_row_states: dict[int, str] = {}
+        self._file_missing = False
 
     def start(self) -> None:
         """Start periodic scanning at the configured interval."""
@@ -100,7 +101,28 @@ class Scheduler(QObject):
             msg = "Excel file not configured or not found"
             logger.warning(msg)
             self.scan_error.emit(msg)
+            
+            if not self._file_missing:
+                self._file_missing = True
+                from PyQt5.QtWidgets import QSystemTrayIcon
+                self._notifier.send_custom_notification(
+                    "⚠ Monitored Excel workbook not found",
+                    "Monitoring paused until file becomes available.",
+                    QSystemTrayIcon.Warning,
+                    show_open_excel=False,
+                )
             return
+
+        # Send recovery alert if file was previously missing
+        if self._file_missing:
+            self._file_missing = False
+            from PyQt5.QtWidgets import QSystemTrayIcon
+            self._notifier.send_custom_notification(
+                "✓ Workbook detected",
+                "Monitoring resumed successfully.",
+                QSystemTrayIcon.Information,
+                show_open_excel=True,
+            )
 
         self.scan_started.emit()
         logger.info("--- Scan cycle started ---")
