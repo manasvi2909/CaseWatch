@@ -91,7 +91,7 @@ class MainWindow(QMainWindow):
 
         # Footer note about Highlight synchronization
         self._sync_note = QLabel("Highlight synchronization will apply automatically after the workbook is saved and closed.")
-        self._sync_note.setStyleSheet("color: #6B7280; font-size: 11px; font-style: italic; margin-top: 4px; margin-bottom: 2px;")
+        self._sync_note.setStyleSheet("color: #6B7280; font-size: 11px; font-style: italic; margin-top: 8px; margin-bottom: 8px;")
         layout.addWidget(self._sync_note)
 
         # Status bar

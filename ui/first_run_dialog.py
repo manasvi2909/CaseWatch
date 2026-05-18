@@ -257,8 +257,9 @@ class FirstRunDialog(QDialog):
         layout.addLayout(ov_layout)
 
         # Footer note about Highlight synchronization
+        layout.addSpacing(16)
         self._sync_note = QLabel("Highlight synchronization will apply automatically after the workbook is saved and closed.")
-        self._sync_note.setStyleSheet("color: #6B7280; font-size: 11px; font-style: italic; margin-left: 40px; margin-bottom: 8px;")
+        self._sync_note.setStyleSheet("color: #6B7280; font-size: 11px; font-style: italic; margin-left: 40px; margin-bottom: 16px;")
         layout.addWidget(self._sync_note)
 
         # Divider 2
