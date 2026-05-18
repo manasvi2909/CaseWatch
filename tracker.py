@@ -103,7 +103,9 @@ class ReminderTracker:
 
         try:
             last_notified = datetime.fromisoformat(last_notified_str)
-            grace_period = timedelta(seconds=5)
+            # Grace period is at most 10% of the cooldown, capped at 5 seconds
+            grace_seconds = min(5.0, cooldown.total_seconds() * 0.1)
+            grace_period = timedelta(seconds=grace_seconds)
             return datetime.now() - last_notified >= (cooldown - grace_period)
         except (ValueError, TypeError):
             logger.warning(

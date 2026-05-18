@@ -187,8 +187,9 @@ class Scheduler(QObject):
                     if prev_state in ("overdue", "reported"):
                         pending_to_apply.add(row_idx)
 
+            success = True
             if overdue_to_apply or reported_to_apply or pending_to_apply:
-                highlight_rows(
+                success = highlight_rows(
                     config.excel_file_path,
                     overdue_rows=overdue_to_apply,
                     reported_rows=reported_to_apply,
@@ -197,7 +198,8 @@ class Scheduler(QObject):
                     reported_color="C6EFCE",
                 )
 
-            self._previous_row_states = current_row_states
+            if success:
+                self._previous_row_states = current_row_states
 
             # Step 7: Signal UI
             self.scan_completed.emit(all_cases, overdue_cases)
