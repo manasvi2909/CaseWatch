@@ -24,30 +24,48 @@ from ui.settings_dialog import SettingsDialog
 from ui.first_run_dialog import FirstRunDialog
 
 
-def _enforce_single_instance() -> QSharedMemory:
+def _enforce_single_instance():
     """
     Ensure only one instance of CaseWatch is running.
-
-    Returns:
-        QSharedMemory object (must stay alive for the duration of the app).
+    Uses platform-optimal locking mechanisms:
+      - macOS/Linux: fcntl file locking (immune to stale locks on crash/kill).
+      - Windows: QSharedMemory (robustly managed by Windows OS).
     """
-    shared_mem = QSharedMemory("CaseWatch_SingleInstance_Lock")
+    import platform
 
-    if shared_mem.attach():
-        # Another instance is already running
-        QMessageBox.warning(
-            None,
-            "CaseWatch",
-            "CaseWatch is already running.\n"
-            "Check your system tray for the existing instance.",
-        )
-        sys.exit(0)
+    if platform.system() != "Windows":
+        import fcntl
+        from config import DATA_DIR
 
-    if not shared_mem.create(1):
-        # Failed to create shared memory (edge case)
-        pass  # Continue anyway — non-critical
+        lock_file_path = DATA_DIR / "casewatch.lock"
+        try:
+            DATA_DIR.mkdir(parents=True, exist_ok=True)
+            lock_file = open(lock_file_path, "w")
+            # Try to acquire an exclusive lock without blocking
+            fcntl.flock(lock_file, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            return lock_file
+        except IOError:
+            QMessageBox.warning(
+                None,
+                "CaseWatch",
+                "CaseWatch is already running.\n"
+                "Check your system tray for the existing instance.",
+            )
+            sys.exit(0)
+    else:
+        shared_mem = QSharedMemory("CaseWatch_SingleInstance_Lock")
+        if shared_mem.attach():
+            QMessageBox.warning(
+                None,
+                "CaseWatch",
+                "CaseWatch is already running.\n"
+                "Check your system tray for the existing instance.",
+            )
+            sys.exit(0)
 
-    return shared_mem
+        if not shared_mem.create(1):
+            pass
+        return shared_mem
 
 
 def _first_run_setup() -> bool:
