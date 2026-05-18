@@ -404,8 +404,12 @@ UI interactions should complete within 1 second.
 
 * Never generate duplicate notifications continuously.
 * Use cooldown intervals between reminders.
-* Ignore rows with invalid or missing allotment dates.
-* Skip empty rows safely.
+* **Row Parsing and Skip Rules**:
+  * **Ingested Rows**: Valid rows containing a valid case allotment date will be read, tracked, and synchronized.
+  * **Skipped Rows**:
+    * **Entirely Empty Rows**: Blank spacer rows are automatically ignored and skipped silently.
+    * **Missing Allotment Date**: Any row where the "Date Allotment" column is blank or invalid will be skipped, as this date is crucial to compute overdue thresholds.
+    * **Malformed Date Formats**: Text entries in date fields that cannot be cleanly parsed are bypassed.
 * Continue processing remaining rows if one row fails.
 
 ## Reminder Logic

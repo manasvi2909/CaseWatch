@@ -76,6 +76,18 @@ Upon the first launch, the Setup Wizard will guide you through:
 3. Setting the overdue threshold (default is 13 days).
 4. Choosing the reminder frequency (e.g., every 30 minutes).
 
+## Excel Parsing & Validation Rules
+
+To prevent data mismatch and ensure accurate tracking, CaseWatch enforces strict, non-destructive validation on row ingestion:
+
+*   **Ingested Rows**: Valid rows containing a valid case allotment date will be read, tracked, and synchronized with the dashboard.
+*   **Skipped Rows**:
+    *   **Entirely Empty Rows**: Blank spacer rows are automatically ignored and skipped silently.
+    *   **Missing Allotment Date**: Any row where the "Date Allotment" column is blank or invalid will be skipped, as this date is crucial to compute overdue thresholds.
+    *   **Malformed Date Formats**: Text entries in date fields that cannot be cleanly parsed are bypassed.
+
+*Note: If your workbook contains blank rows or rows missing crucial dates, the dashboard case count will reflect only the verified, valid case records processed. You can consult `logs/casewatch.log` to see if any row was skipped and why.*
+
 ## Data Integrity
 
 CaseWatch prioritizes the safety of your laboratory records:

@@ -15,9 +15,19 @@ from typing import Any, Optional
 
 # ── Directory Paths ──
 if getattr(sys, "frozen", False):
-    # PyInstaller packaging environment
+    # PyInstaller packaging environment - Use user-writable OS AppData folders
+    # to guarantee write permissions under locked-down office machines.
+    import platform
+    home = Path.home()
+    if platform.system() == "Windows":
+        local_appdata = os.getenv("LOCALAPPDATA")
+        BASE_DIR = Path(local_appdata) / "CaseWatch" if local_appdata else home / "AppData" / "Local" / "CaseWatch"
+    elif platform.system() == "Darwin":
+        BASE_DIR = home / "Library" / "Application Support" / "CaseWatch"
+    else:
+        BASE_DIR = home / ".config" / "CaseWatch"
+        
     ASSET_DIR = Path(sys._MEIPASS)
-    BASE_DIR = Path(sys.executable).resolve().parent
 else:
     # Local development environment
     ASSET_DIR = Path(__file__).resolve().parent
