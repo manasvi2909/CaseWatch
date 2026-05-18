@@ -1,4 +1,5 @@
 # CaseWatch
+*Version 1.0.0-beta*
 
 CaseWatch is a specialized desktop monitoring application designed for district Forensic Science Laboratories (FSL). It automates the tracking of overdue FIR (First Information Report) cases by monitoring an Excel-based registry in the background and providing interactive alerts to staff members.
 

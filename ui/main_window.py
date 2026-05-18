@@ -352,12 +352,13 @@ class MainWindow(QMainWindow):
 
     def _on_about(self) -> None:
         """Show about dialog."""
+        from config import APP_VERSION
         QMessageBox.about(
             self,
             "About CaseWatch",
             "<h2>CaseWatch</h2>"
             "<p><b>FSL FIR Monitoring & Reminder System</b></p>"
-            "<p>Version 1.0.0</p>"
+            f"<p>Version {APP_VERSION}</p>"
             "<p>Monitors FIR case files and automatically identifies<br>"
             "overdue reports for district FSL labs.</p>"
             "<hr>"

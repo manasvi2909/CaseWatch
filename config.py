@@ -12,6 +12,8 @@ import threading
 from pathlib import Path
 from typing import Any, Optional
 
+APP_VERSION = "1.0.0-beta"
+
 
 # ── Directory Paths ──
 if getattr(sys, "frozen", False):

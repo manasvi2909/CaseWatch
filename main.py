@@ -132,10 +132,10 @@ def main() -> None:
     setup_logging(config.log_level)
     logger = get_logger("main")
 
-    from config import BASE_DIR, DATA_DIR, CONFIG_FILE, ASSET_DIR
+    from config import BASE_DIR, DATA_DIR, CONFIG_FILE, ASSET_DIR, APP_VERSION
 
     logger.info("=" * 60)
-    logger.info("CaseWatch starting up...")
+    logger.info("CaseWatch starting up... (Version: %s)", APP_VERSION)
     logger.info("Platform: %s", platform.platform())
     logger.info("Python: %s", sys.version)
     logger.info("Mode: %s", "Frozen (Packaged)" if getattr(sys, "frozen", False) else "Development")
