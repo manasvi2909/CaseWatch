@@ -256,8 +256,11 @@ class FirstRunDialog(QDialog):
         ov_layout.addStretch()
         layout.addLayout(ov_layout)
 
-        layout.addStretch() # Push everything up to top
-        
+        # Footer note about Highlight synchronization
+        self._sync_note = QLabel("Highlight synchronization will apply automatically after the workbook is saved and closed.")
+        self._sync_note.setStyleSheet("color: #6B7280; font-size: 11px; font-style: italic; margin-left: 40px; margin-bottom: 8px;")
+        layout.addWidget(self._sync_note)
+
         # Divider 2
         div2 = QFrame()
         div2.setFrameShape(QFrame.HLine)
